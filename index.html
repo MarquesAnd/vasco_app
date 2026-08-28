@@ -1,0 +1,386 @@
+<!doctype html>
+<!-- Vasco da Gama — PWA ao vivo. Emblema/grafismos são interpretação original inspirada na estética do clube. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0B0C">
+<title>Vasco da Gama — Ao Vivo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --preto:#0B0B0C;--preto-2:#141418;--branco:#fff;--off:#E9E9E6;
+    --carmim:#C8102E;--carmim-2:#E11836;--linha:rgba(255,255,255,.08);--linha-2:rgba(255,255,255,.14);
+    --mut:rgba(255,255,255,.52);--mut-2:rgba(255,255,255,.38);--verde:#3FB56B;--azul:#3B82C4;--nav-h:70px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{background:#000;font-family:'Inter',system-ui,sans-serif;color:var(--off);display:flex;justify-content:center}
+  .app{width:100%;max-width:440px;min-height:100vh;background:radial-gradient(120% 60% at 50% -10%,#202027 0%,var(--preto) 55%) fixed,var(--preto);position:relative;overflow:hidden;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+  header{position:relative;padding:20px 20px 18px;overflow:hidden;border-bottom:1px solid var(--linha)}
+  .sash{position:absolute;inset:-40% -20%;pointer-events:none}
+  .sash::before,.sash::after{content:"";position:absolute;top:-30%;height:190%;transform:rotate(24deg)}
+  .sash::before{left:16%;width:60px;background:linear-gradient(180deg,#0e0e10,#000)}
+  .sash::after{left:28%;width:9px;background:var(--carmim);opacity:.85;box-shadow:0 0 26px rgba(200,16,46,.5)}
+  .hbar{position:relative;display:flex;align-items:center;gap:13px;z-index:2}
+  .emblem{width:48px;height:48px;flex:0 0 auto}
+  .htext .kicker{font-size:9.5px;letter-spacing:.34em;color:var(--carmim-2);font-weight:600;margin:0 0 3px}
+  .htext h1{font-family:'Oswald';font-weight:700;font-size:24px;line-height:.96;margin:0;color:#fff}
+  .htext .sub{font-size:11px;color:var(--mut);margin:4px 0 0}
+  main{padding:18px 16px 8px}
+  .view{display:none;animation:fade .3s ease both}.view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.view{animation:none}}
+  .eyebrow{font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.24em;color:var(--mut);margin:2px 4px 12px}
+
+  /* live card */
+  .live{position:relative;background:linear-gradient(180deg,#17171c,#101014);border:1px solid var(--linha-2);border-radius:18px;padding:18px 16px;overflow:hidden}
+  .live .slash{position:absolute;top:-30px;right:16px;width:9px;height:150px;background:var(--carmim);transform:rotate(24deg);opacity:.6}
+  .live-badge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.05em;color:#ff8296;background:rgba(200,16,46,.14);border:1px solid rgba(200,16,46,.34);padding:4px 10px;border-radius:100px}
+  .live-badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--carmim-2);animation:pl 1.2s infinite}
+  @keyframes pl{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+  .live-comp{font-size:11px;color:var(--mut);margin-top:2px}
+  .score{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 6px}
+  .score .tm{flex:1;text-align:center}
+  .score .badge{width:44px;height:44px;border-radius:12px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-family:'Oswald';font-weight:700;font-size:15px;color:#fff}
+  .score .nm{font-family:'Oswald';font-weight:500;font-size:14px;color:#fff}
+  .score .sc{font-family:'Oswald';font-weight:700;font-size:44px;color:#fff;min-width:34px;text-align:center;line-height:1}
+  .score .x{color:var(--mut-2);font-weight:600}
+  .live-min{text-align:center;font-size:12px;color:var(--carmim-2);font-weight:600;margin-top:4px}
+  .live-empty{text-align:center;padding:14px 6px;color:var(--mut)}
+  .live-empty .big{font-family:'Oswald';font-size:16px;color:#fff;margin-bottom:4px}
+
+  /* push button */
+  .push-cta{display:flex;align-items:center;gap:12px;width:100%;margin:14px 0 6px;background:var(--carmim);border:0;border-radius:14px;padding:14px 16px;color:#fff;font-family:'Oswald';font-weight:600;font-size:14px;letter-spacing:.03em;cursor:pointer;text-align:left}
+  .push-cta.secondary{background:var(--preto-2);border:1px solid var(--linha-2);color:var(--off)}
+  .push-cta svg{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8}
+  .push-cta small{display:block;font-family:'Inter';font-weight:400;font-size:11px;opacity:.85;letter-spacing:0;margin-top:2px}
+  .push-cta:disabled{opacity:.6;cursor:default}
+  .hint{font-size:11px;color:var(--mut-2);margin:8px 4px 0;line-height:1.5}
+
+  /* champ mini panorama */
+  .prow{display:flex;gap:10px;margin-top:16px}
+  .pcard{flex:1;background:var(--preto-2);border:1px solid var(--linha);border-radius:13px;padding:12px 12px}
+  .pcard .t{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+  .pcard .v{font-family:'Oswald';font-weight:700;font-size:20px;color:#fff;line-height:1}
+  .pcard .s{font-size:10.5px;color:var(--mut);margin-top:3px}
+
+  /* matches */
+  .match{background:var(--preto-2);border:1px solid var(--linha);border-radius:14px;padding:13px 14px;margin-bottom:11px;position:relative;overflow:hidden}
+  .match .redline{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--carmim)}
+  .match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .comp{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--carmim-2)}
+  .loc{font-size:10.5px;color:var(--mut)}
+  .teams{display:flex;align-items:center;gap:10px}
+  .teams .side{display:flex;align-items:center;gap:8px;flex:1}
+  .teams .side.away{justify-content:flex-end}
+  .badge-s{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Oswald';font-weight:700;font-size:11px;color:#fff;flex:0 0 auto}
+  .tname{font-family:'Oswald';font-weight:500;font-size:15px;color:#fff}
+  .vs{font-size:11px;color:var(--mut-2);font-weight:600}
+  .match-info{display:flex;gap:14px;margin-top:11px;padding-top:10px;border-top:1px solid var(--linha);font-size:11.5px;color:var(--mut)}
+  .match-info b{color:var(--off);font-weight:600}
+  .note{margin-top:9px;font-size:11px;color:#7fdca0;background:rgba(63,181,107,.1);border:1px solid rgba(63,181,107,.24);padding:6px 9px;border-radius:8px}
+
+  /* table */
+  .legend{display:flex;gap:14px;margin:0 4px 12px;font-size:10.5px;color:var(--mut)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .lg{width:8px;height:8px;border-radius:2px}.z-lib{background:var(--verde)}.z-sul{background:var(--azul)}.z-reb{background:var(--carmim)}.z-neu{background:transparent}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{font-family:'Oswald';font-weight:500;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut-2);text-align:center;padding:0 0 8px}
+  thead th.l{text-align:left;padding-left:4px}
+  tbody td{padding:9px 0;border-top:1px solid var(--linha);text-align:center}
+  tbody td.l{text-align:left}
+  .row-team{display:flex;align-items:center;gap:9px}
+  .zone{width:3px;height:20px;border-radius:2px;flex:0 0 auto}
+  .mini{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Oswald';font-weight:700;font-size:9.5px;color:#fff;flex:0 0 auto}
+  .tm-name{font-weight:500;color:var(--off);font-size:12.5px}
+  .pos{font-family:'Oswald';font-weight:600;color:var(--mut);width:20px}
+  .pts{font-family:'Oswald';font-weight:700;color:#fff;font-size:14px}
+  tr.vasco td{background:linear-gradient(90deg,rgba(200,16,46,.14),rgba(200,16,46,.03))}
+  tr.vasco .tm-name{color:#fff;font-weight:700}tr.vasco .pos{color:var(--carmim-2)}
+  .updated{font-size:10px;color:var(--mut-2);text-align:right;margin:8px 4px 0}
+
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(10,10,12,.92);backdrop-filter:blur(14px);border-top:1px solid var(--linha-2);display:flex;z-index:30}
+  .nav-btn{flex:1;background:none;border:0;color:var(--mut-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-family:'Oswald';font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;position:relative;padding-top:6px}
+  .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .nav-btn.active{color:#fff}
+  .nav-btn.active::before{content:"";position:absolute;top:0;width:26px;height:3px;border-radius:0 0 3px 3px;background:var(--carmim)}
+  .nav-btn:focus-visible{outline:2px solid var(--carmim-2);outline-offset:-4px;border-radius:8px}
+  .toast{position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;transform:translateX(-50%);background:#fff;color:#111;font-size:12.5px;font-weight:600;padding:10px 16px;border-radius:100px;z-index:50;opacity:0;transition:opacity .25s;max-width:90%;text-align:center}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="sash" aria-hidden="true"></div>
+    <div class="hbar">
+      <svg class="emblem" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="48" fill="#0d0d10" stroke="#2a2a30" stroke-width="2"/>
+        <path d="M50 10 L58 34 L50 42 L42 34 Z M90 50 L66 58 L58 50 L66 42 Z M50 90 L42 66 L50 58 L58 66 Z M10 50 L34 42 L42 50 L34 58 Z" fill="#fff"/>
+        <circle cx="50" cy="50" r="6.5" fill="#C8102E"/>
+      </svg>
+      <div class="htext">
+        <p class="kicker">CLUB DE REGATAS</p>
+        <h1>VASCO DA GAMA</h1>
+        <p class="sub">Ao vivo · Temporada 2026</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== AO VIVO ===== -->
+    <section class="view active" id="v-live">
+      <p class="eyebrow">AO VIVO</p>
+      <div class="live" id="liveCard">
+        <div class="slash"></div>
+        <div class="live-empty" id="liveEmpty">
+          <div class="big">Sem jogo ao vivo agora</div>
+          <div style="font-size:12px">O placar aparece aqui automaticamente quando a bola rolar.</div>
+        </div>
+      </div>
+
+      <button class="push-cta" id="pushBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Ativar alertas de gol e vitória
+          <small>Notifica no celular mesmo com o app fechado</small>
+        </span>
+      </button>
+      <p class="hint" id="pushHint"></p>
+
+      <p class="eyebrow" style="margin-top:22px">PANORAMA</p>
+      <div class="prow">
+        <div class="pcard"><div class="t">Brasileirão</div><div class="v">19º</div><div class="s">22 pts · Z-4</div></div>
+        <div class="pcard"><div class="t">Copa do Brasil</div><div class="v">QF</div><div class="s">Ida 1×0 ✓</div></div>
+        <div class="pcard"><div class="t">Sul-Americana</div><div class="v">QF</div><div class="s">Classificado</div></div>
+      </div>
+    </section>
+
+    <!-- ===== JOGOS ===== -->
+    <section class="view" id="v-jogos">
+      <p class="eyebrow">PRÓXIMOS JOGOS</p>
+      <div id="matches"></div>
+    </section>
+
+    <!-- ===== TABELA ===== -->
+    <section class="view" id="v-tab">
+      <p class="eyebrow" id="tabTitle">CLASSIFICAÇÃO · APÓS 24ª RODADA</p>
+      <div class="legend">
+        <span><i class="lg z-lib"></i>Libertadores</span>
+        <span><i class="lg z-sul"></i>Sul-Americana</span>
+        <span><i class="lg z-reb"></i>Rebaixamento</span>
+      </div>
+      <table><thead><tr><th>#</th><th class="l">Time</th><th>J</th><th>SG</th><th>Pts</th></tr></thead>
+        <tbody id="tbody"></tbody></table>
+      <p class="updated" id="tabUpdated"></p>
+    </section>
+  </main>
+
+  <nav>
+    <button class="nav-btn active" data-view="v-live" aria-label="Ao vivo">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+      Ao vivo
+    </button>
+    <button class="nav-btn" data-view="v-jogos" aria-label="Jogos">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      Jogos
+    </button>
+    <button class="nav-btn" data-view="v-tab" aria-label="Tabela">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Tabela
+    </button>
+  </nav>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script type="module">
+/* ==========================================================================
+   CONFIG — preencha com as suas chaves (veja o README).
+   Enquanto estiver com os valores "COLE_AQUI", o app funciona no modo estático
+   (jogos e tabela abaixo) e o ao vivo/push ficam desativados com um aviso.
+   ========================================================================== */
+const SUPABASE_URL      = "COLE_AQUI_SUPABASE_URL";        // ex: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = "COLE_AQUI_SUPABASE_ANON_KEY";
+const VAPID_PUBLIC_KEY  = "COLE_AQUI_VAPID_PUBLIC_KEY";
+const CONFIGURED = !SUPABASE_URL.startsWith("COLE_AQUI");
+
+/* ---- cores dos escudos ---- */
+const COL={VAS:'#0B0B0C',CRU:'#2456A6',VIT:'#C8102E',FLU:'#7A1E2B',GRE:'#1E5AA8',PAL:'#0E6B3D',FLA:'#B01020',CAP:'#C81E2C',BAH:'#1B72C4',RBB:'#0E2A6B',CFC:'#0E7A44',CAM:'#151515',COR:'#151515',BOT:'#151515',SAO:'#B01020',SAN:'#151515',INT:'#B01020',MIR:'#0E8F4C',REM:'#0B4FA0',CHA:'#0E8F4C'};
+
+/* ---- próximos jogos (fallback estático) ---- */
+const GAMES=[
+ {comp:'Brasileirão · 25ª rodada',loc:'Casa',h:'Vasco',ha:'VAS',a:'Cruzeiro',aa:'CRU',date:'Sáb, 29/08 · 21h20',place:'São Januário',note:null},
+ {comp:'Copa do Brasil · volta',loc:'Fora',h:'Vitória',ha:'VIT',a:'Vasco',aa:'VAS',date:'Qua, 02/09 · 21h30',place:'Barradão',note:'Vasco venceu a ida por 1×0 — joga por empate para avançar.'},
+ {comp:'Brasileirão · 26ª rodada',loc:'Fora',h:'Fluminense',ha:'FLU',a:'Vasco',aa:'VAS',date:'Sex, 05/09 · 21h00',place:'Maracanã',note:null},
+ {comp:'Brasileirão · 27ª rodada',loc:'Casa',h:'Vasco',ha:'VAS',a:'Grêmio',aa:'GRE',date:'Data a definir',place:'São Januário',note:null}
+];
+/* ---- tabela (fallback estático, após 24ª rodada) ---- */
+const TABLE=[
+ [1,'Palmeiras','PAL',24,'+24',51],[2,'Flamengo','FLA',23,'+24',45],[3,'Athletico-PR','CAP',24,'+12',44],[4,'Fluminense','FLU',24,'+7',41],
+ [5,'Cruzeiro','CRU',24,'+1',39],[6,'Bahia','BAH',24,'+6',37],[7,'RB Bragantino','RBB',23,'+5',35],[8,'Coritiba','CFC',24,'−1',34],
+ [9,'Atlético-MG','CAM',23,'+3',33],[10,'Corinthians','COR',24,'+2',32],[11,'Botafogo','BOT',23,'0',30],[12,'Vitória','VIT',24,'−12',29],
+ [13,'São Paulo','SAO',23,'0',27],[14,'Santos','SAN',23,'−3',26],[15,'Grêmio','GRE',23,'−7',25],[16,'Internacional','INT',24,'−4',25],
+ [17,'Mirassol','MIR',23,'−10',24],[18,'Remo','REM',24,'−11',23],[19,'Vasco','VAS',23,'−14',22],[20,'Chapecoense','CHA',23,'−22',14]
+];
+
+/* ---- render: jogos ---- */
+const mc=document.getElementById('matches');
+GAMES.forEach(g=>{
+  const badge=ab=>`<span class="badge-s" style="background:${COL[ab]||'#333'}">${ab}</span>`;
+  mc.insertAdjacentHTML('beforeend',
+   `<div class="match"><span class="redline"></span>
+      <div class="match-top"><span class="comp">${g.comp}</span><span class="loc">${g.loc}</span></div>
+      <div class="teams">
+        <span class="side">${badge(g.ha)}<span class="tname">${g.h}</span></span>
+        <span class="vs">×</span>
+        <span class="side away"><span class="tname">${g.a}</span>${badge(g.aa)}</span>
+      </div>
+      <div class="match-info"><span><b>${g.date}</b></span><span>${g.place}</span></div>
+      ${g.note?`<div class="note">${g.note}</div>`:''}
+    </div>`);
+});
+
+/* ---- render: tabela ---- */
+function renderTable(rows){
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  rows.forEach(r=>{
+    const pos=r[0], zone=pos<=6?'z-lib':(pos>=17?'z-reb':(pos<=12?'z-sul':'z-neu'));
+    const vas=r[2]==='VAS';
+    tb.insertAdjacentHTML('beforeend',
+     `<tr class="${vas?'vasco':''}">
+        <td class="pos">${pos}</td>
+        <td class="l"><span class="row-team"><span class="zone ${zone}"></span>
+          <span class="mini" style="background:${COL[r[2]]||'#333'}">${r[2]}</span>
+          <span class="tm-name">${r[1]}</span></span></td>
+        <td>${r[3]}</td><td style="color:var(--mut)">${r[4]}</td><td class="pts">${r[5]}</td>
+      </tr>`);
+  });
+}
+renderTable(TABLE);
+
+/* ---- nav ---- */
+const btns=document.querySelectorAll('.nav-btn');
+btns.forEach(b=>b.addEventListener('click',()=>{
+  btns.forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(b.dataset.view).classList.add('active'); window.scrollTo(0,0);
+}));
+
+/* ---- toast ---- */
+const toastEl=document.getElementById('toast');
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2600);}
+
+/* ---- service worker ---- */
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+/* ---- live card render ---- */
+function badgeFor(sigla){return `<span class="badge" style="background:${COL[sigla]||'#333'}">${sigla||'—'}</span>`;}
+function renderLive(s){
+  const card=document.getElementById('liveCard');
+  if(!s || s.status==='encerrada'){
+    card.innerHTML=`<div class="slash"></div><div class="live-empty">
+      <div class="big">Sem jogo ao vivo agora</div>
+      <div style="font-size:12px">O placar aparece aqui automaticamente quando a bola rolar.</div></div>`;
+    return;
+  }
+  const hs=COL[s.home_sigla]?s.home_sigla:'—', as=COL[s.away_sigla]?s.away_sigla:'—';
+  card.innerHTML=`<div class="slash"></div>
+    <div class="live-badge"><span class="pulse"></span> AO VIVO${s.minuto?` · ${s.minuto}`:''}</div>
+    <div class="live-comp">${s.competicao||''}</div>
+    <div class="score">
+      <div class="tm"><div class="badge" style="background:${COL[hs]||'#333'}">${s.home_sigla||''}</div><div class="nm">${s.home_name||''}</div></div>
+      <div class="sc">${s.score_home ?? 0}</div><div class="x">×</div><div class="sc">${s.score_away ?? 0}</div>
+      <div class="tm"><div class="badge" style="background:${COL[as]||'#333'}">${s.away_sigla||''}</div><div class="nm">${s.away_name||''}</div></div>
+    </div>`;
+}
+
+/* ==========================================================================
+   BACKEND (Supabase) — só ativa quando CONFIGURED = true
+   ========================================================================== */
+const pushBtn=document.getElementById('pushBtn');
+const pushHint=document.getElementById('pushHint');
+let supabase=null;
+
+async function initBackend(){
+  if(!CONFIGURED){
+    pushBtn.disabled=true; pushBtn.classList.add('secondary');
+    pushHint.textContent='Backend ainda não configurado. Preencha as chaves no topo do index.html (veja o README) para ligar o placar ao vivo e as notificações.';
+    return;
+  }
+  const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2');
+  supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+  // 1) estado inicial do ao vivo
+  try{
+    const {data}=await supabase.from('live_state').select('*').order('updated_at',{ascending:false}).limit(1);
+    if(data&&data[0]) renderLive(data[0]);
+  }catch(_){}
+
+  // 2) tempo real: atualiza o placar sozinho
+  supabase.channel('live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'live_state'},payload=>{
+      renderLive(payload.new);
+    }).subscribe();
+
+  // 3) tabela do Supabase (se existir), com fallback no estático
+  try{
+    const {data}=await supabase.from('standings').select('*').order('pos',{ascending:true});
+    if(data&&data.length){
+      renderTable(data.map(r=>[r.pos,r.team,r.sigla,r.played,r.gd,r.points]));
+      const d=data[0].updated_at?new Date(data[0].updated_at):null;
+      if(d) document.getElementById('tabUpdated').textContent='Atualizado '+d.toLocaleString('pt-BR');
+    }
+  }catch(_){}
+
+  // estado do botão de push
+  refreshPushState();
+}
+
+function urlB64ToUint8Array(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const base=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base); return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+async function currentSub(){
+  const reg=await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+async function refreshPushState(){
+  if(!('Notification' in window)||!('PushManager' in window)){
+    pushBtn.disabled=true; pushHint.textContent='Este navegador não suporta notificações push.'; return;
+  }
+  const sub=await currentSub();
+  if(Notification.permission==='granted'&&sub){
+    pushBtn.classList.add('secondary');
+    pushBtn.querySelector('span').firstChild.textContent='Alertas ativados ✓';
+    pushBtn.querySelector('small').textContent='Você será avisado a cada gol e na vitória';
+  }
+}
+async function enablePush(){
+  try{
+    if(Notification.permission==='denied'){ toast('Permissão bloqueada nas configurações do navegador'); return; }
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ toast('Permissão não concedida'); return; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC_KEY)});
+    }
+    const j=sub.toJSON();
+    const {error}=await supabase.from('push_subscriptions').upsert(
+      {endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'});
+    if(error){ toast('Falha ao registrar. Confira as chaves.'); return; }
+    toast('Alertas ativados! Vai com tudo, Gigante!');
+    refreshPushState();
+  }catch(e){ toast('Erro ao ativar alertas'); }
+}
+pushBtn.addEventListener('click',()=>{ if(!CONFIGURED){toast('Configure o backend primeiro');return;} enablePush(); });
+
+initBackend();
+</script>
+</body>
+</html>
